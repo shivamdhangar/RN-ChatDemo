@@ -4,10 +4,10 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import LoginScreen from '../screens/loginScreen';
 import SignUpScreen from '../screens/signUp';
-import HomeScreen from '../screens/home';
 import {STRINGS} from '../utils/strings';
 import OtpScreen from '../screens/otpScreen';
 import HomeChatScreen from '../screens/homeChat';
+import SplashScreen from '../screens/splash';
 
 export default function NavigationScreen() {
   const Stack = createNativeStackNavigator();
@@ -18,7 +18,10 @@ export default function NavigationScreen() {
         screenOptions={{headerShown: false}}
         // initialRouteName="HomeChatScreen"
       >
-        <Stack.Screen name={STRINGS.SCREEN.HOMESCREEN} component={HomeScreen} />
+        <Stack.Screen
+          name={STRINGS.SCREEN.HOMESCREEN}
+          component={SplashScreen}
+        />
         <Stack.Screen
           name={STRINGS.SCREEN.LOGINSCREEN}
           component={LoginScreen}

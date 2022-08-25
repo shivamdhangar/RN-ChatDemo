@@ -15,11 +15,13 @@ export default function HomeChatScreen() {
     auth()
       .signOut()
       .then((res: any) => {
-        console.log('User signed out', res), navigation.navigate('LogInScreen');
-        dispatch({type: 'users', payload: {}});
+        console.log('User signed out', res),
+          dispatch({type: 'users', payload: {}});
+        navigation.navigate('LogInScreen');
       })
       .catch((err: any) => {
         console.log('error in logout', err);
+        // navigation.navigate('LogInScreen');
       });
   };
   return (

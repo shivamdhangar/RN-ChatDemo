@@ -4,4 +4,8 @@ export const images = {
   backarrow: require('../assets/images/leftarrow.png'),
   search: require('../assets/images/magnifying_glass.png'),
   threeDot: require('../assets/images/menu.png'),
+  back: require('../assets/images/back.png'),
+  logout: require('../assets/images/power.png'),
+  update: require('../assets/images/updated.png'),
+  account: require('../assets/images/account.png'),
 };

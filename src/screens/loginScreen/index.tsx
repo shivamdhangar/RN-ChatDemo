@@ -15,6 +15,7 @@ import {useNavigation} from '@react-navigation/native';
 import CheckBox from '@react-native-community/checkbox';
 import {STRINGS} from '../../utils/strings';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import COLOR from '../../utils/color';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
     height: normalize(45),
     paddingRight: normalize(20),
     marginHorizontal: 30,
-    backgroundColor: 'grey',
+    backgroundColor: COLOR.LIGHT_GREY,
   },
   customButtonStyle: {
     top: normalize(10),

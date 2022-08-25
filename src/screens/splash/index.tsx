@@ -7,7 +7,7 @@ import {useNavigation} from '@react-navigation/native';
 import {STRINGS} from '../../utils/strings';
 import {useSelector} from 'react-redux';
 
-export default function HomeScreen() {
+export default function SplashScreen() {
   const navigation = useNavigation<any>();
   const NavigateSignIn = () => {
     return navigation.navigate('LogInScreen');
