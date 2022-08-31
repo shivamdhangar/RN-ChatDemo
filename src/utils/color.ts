@@ -1,11 +1,7 @@
-const COLOR = {
+export const COLOR = {
   WHITE: '#FFFFFF',
-  BLACK: '#000000',
-  DARK_GREY: '#999999',
-  BLUE: '#44C2E3',
-  RED: '#FF6258',
-  TEXT_COLOR: '#398AB9',
-  LIGHT_GREY: '#121212',
+  BLACK: 'black',
   GREEN: '#0cda89',
+  GREY: '#1F1B1B',
+  YELLOW: '#e8e22e',
 };
-export default COLOR;

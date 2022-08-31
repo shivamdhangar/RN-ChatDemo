@@ -1,11 +1,16 @@
-export const images = {
-  splash_img: require('../assets/images/1_Light_Splash_Screen.png'),
-  telephone: require('../assets/images/telephone.png'),
-  backarrow: require('../assets/images/leftarrow.png'),
-  search: require('../assets/images/magnifying_glass.png'),
-  threeDot: require('../assets/images/menu.png'),
-  back: require('../assets/images/back.png'),
-  logout: require('../assets/images/power.png'),
-  update: require('../assets/images/updated.png'),
-  account: require('../assets/images/account.png'),
-};
+export const images={
+    splash:require('../assets/images/Splashimg.png'),
+    whtsplogo:require('../assets/images/whtsplogo.png'),
+    phone:require('../assets/images/phone.png'),
+    uncheck:require('../assets/images/unchecked.png'),
+    check:require('../assets/images/check.png'),
+    back:require('../assets/images/back.png'),
+    logo:require('../assets/images/Whatsapp.png'),
+    logout:require('../assets/images/power.png'),
+    update:require('../assets/images/updated.png'),
+    account:require('../assets/images/account.png'),
+    search:require('../assets/images/search.png'),
+    dot:require('../assets/images/dots.png'),
+    video:require('../assets/images/video.png'),
+    telephone:require('../assets/images/telephone.png'),
+}

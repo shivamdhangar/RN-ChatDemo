@@ -4,6 +4,12 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.ReactRootView;
 
+// protected List<ReactPackage> getPackages() {
+//   return Arrays.asList(
+//     new MainReactPackage(),
+//     new ReactNativeFirebaseMessagingPackage(),
+//   );
+// }
 public class MainActivity extends ReactActivity {
 
   /**

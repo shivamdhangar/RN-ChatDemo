@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "818330049059",
+    "project_id": "chatdemoapp-76190",
+    "storage_bucket": "chatdemoapp-76190.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:818330049059:android:8c861d0a618305021b6f96",
+        "android_client_info": {
+          "package_name": "com.chatdemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "818330049059-fn0h19568hvjhb6en3oh0rtni3t42bvp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5IyESaWHYovmNesnY1val6vNaRv5I0CU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "818330049059-fn0h19568hvjhb6en3oh0rtni3t42bvp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "818330049059-urc3hg70kt43mh71ff06h07tadasa6fa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "org.reactjs.native.example.chatDemo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
