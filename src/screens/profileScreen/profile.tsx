@@ -73,7 +73,7 @@ export default function ProfileScreen() {
         // console.log('Total users: ', querySnapshot.size);
         querySnapshot.forEach(documentSnapshot => {
           const UserName = documentSnapshot.data();
-          console.log('User Name========:=====> ', UserName);
+          // console.log('User Name========:=====> ', UserName);
         });
       });
   }, []);
@@ -93,7 +93,18 @@ export default function ProfileScreen() {
       })
       .then(res => {
         console.log('Response is', res);
-        dispatch({type: 'Set_Data', payload: res});
+        dispatch({
+          type: 'Set_Data',
+          payload: {
+            Name: name,
+            Email: Email,
+            About: About,
+            display: coverimg,
+            uid: uid,
+          },
+        });
+        console.log('!!!!!!!!!!!!!!!', res);
+
         navigation.navigate('HomeScreen');
       })
       .catch(err => {
@@ -219,10 +230,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   backgroundimg: {
-    height: normalize(60),
-    width: normalize(60),
+    height: normalize(90),
+    width: normalize(90),
     borderRadius: normalize(100),
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   imgContainer: {
     marginVertical: 20,

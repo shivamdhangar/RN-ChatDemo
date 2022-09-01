@@ -8,20 +8,17 @@ import {
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {useNavigation} from '@react-navigation/native';
-import firestore from '@react-native-firebase/firestore';
-import {normalize} from '../../../utils/dimensions';
 import {useSelector} from 'react-redux';
+import firestore from '@react-native-firebase/firestore';
 import {COLOR} from '../../../utils/color';
-import {} from 'react-native-vector-icons';
+import {normalize} from '../../../utils/dimensions';
 import {images} from '../../../utils/images';
 
-export default function MessageScreen() {
+export default function AllUser() {
   const [Name, setUserName] = useState<any>([]);
   const navigation = useNavigation<any>();
   const {Auth_Data} = useSelector((store: any) => store.authReducer);
   let UserId = Auth_Data?.user?.user?.uid;
-  console.log('Auth data', Auth_Data);
-
   useEffect(() => {
     firestore()
       .collection('Users')
@@ -29,7 +26,6 @@ export default function MessageScreen() {
       .get()
       .then(res => {
         //@ts-ignore
-
         console.log('result', res._docs);
         //@ts-ignore
         let users = res?._docs?.map((item: any) => {
@@ -40,19 +36,30 @@ export default function MessageScreen() {
         setUserName(users);
       });
   }, []);
-  // useEffect(() => {
-  //   const abc = firestore()
-  //     .collection('Users')
-  //     .doc(UserId)
-  //     .collection('Inbox')
-  //     .onSnapshot(doc => {
-  //       const dataArray = doc?._docs.map(element => element._data);
-  //       setUserName(dataArray);
-  //       console.log('dataArray', dataArray);
-  //     });
-  //   console.log('abc', abc);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
+
+  const _renderItem = ({item}: any) => {
+    const NO_DP_IMAGE = require('../../../assets/images/account.png');
+    return (
+      <TouchableOpacity
+        style={styles.flatlistview}
+        onPress={() =>
+          navigation.navigate('Chating', {
+            Name: item?.Name,
+            UID: item?.uid,
+            status: item?.isActive,
+          })
+        }>
+        <View>
+          <Image
+            source={item?.display ? {uri: item?.display} : NO_DP_IMAGE}
+            // source={{uri: item.display}}
+            style={styles.imgStyle}
+          />
+        </View>
+        <Text style={styles.name}>{item?.Name}</Text>
+      </TouchableOpacity>
+    );
+  };
 
   const FlatListItemSeparator = () => {
     return (
@@ -65,41 +72,27 @@ export default function MessageScreen() {
       />
     );
   };
-  const _renderItem = ({item}: any) => {
-    console.log(' img in renderItem', item?.display);
-    const NO_DP_IMAGE = require('../../../assets/images/account.png');
-    return (
-      <TouchableOpacity
-        style={styles.flatlistview}
-        onPress={() =>
-          navigation.navigate('Chating', {
-            Name: item?.Name,
-            UID: item?.uid,
-            status: item?.isActive,
-            dp: item?.display,
-          })
-        }>
-        <View>
-          <Image
-            source={item?.display ? {uri: item?.display} : NO_DP_IMAGE}
-            // source={{uri: item?.display}}
-            style={styles.imgStyle}
-          />
-        </View>
-        <Text style={styles.name}>{item?.Name}</Text>
-      </TouchableOpacity>
-    );
-  };
   return (
     <View style={styles.container}>
+      <View style={{marginTop: normalize(50), flexDirection: 'row'}}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Image source={images.back} style={styles.backImgStyle} />
+        </TouchableOpacity>
+        <Text style={styles.select}>{'Select Contacts'}</Text>
+        <TouchableOpacity style={styles.searchImgTouchable}>
+          <Image source={images.search} style={styles.searchImg} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.menuTouchable}
+          onPress={() => navigation.navigate('ProfileScreen')}>
+          <Image style={styles.threeDotImg} source={images.dot} />
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={Name}
         renderItem={_renderItem}
         ItemSeparatorComponent={FlatListItemSeparator}
       />
-      <TouchableOpacity onPress={() => navigation.navigate('AllUser')}>
-        <Image style={styles.fab} source={images.message} />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -107,11 +100,13 @@ export default function MessageScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: COLOR.BLACK,
   },
   flatlistview: {
     flexDirection: 'row',
     alignItems: 'center',
     height: normalize(70),
+    color: COLOR.BLACK,
   },
   imgStyle: {
     height: normalize(45),
@@ -119,19 +114,47 @@ const styles = StyleSheet.create({
     borderRadius: normalize(50),
     resizeMode: 'cover',
   },
+  backImgStyle: {
+    height: normalize(20),
+    width: normalize(20),
+    resizeMode: 'contain',
+  },
   name: {
     color: 'white',
     margin: normalize(10),
     fontWeight: '500',
     fontSize: 18,
   },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    height: normalize(40),
-    width: normalize(40),
+  searchImg: {
+    height: normalize(20),
+    width: normalize(20),
     resizeMode: 'contain',
+  },
+  searchImgTouchable: {
+    marginLeft: normalize(140),
+    borderColor: '#2f3d29',
+    borderWidth: 2,
+    borderRadius: normalize(10),
+    backgroundColor: '#2f3d29',
+    padding: normalize(3),
+  },
+  threeDotImg: {
+    height: normalize(20),
+    width: normalize(20),
+    resizeMode: 'contain',
+  },
+  menuTouchable: {
+    marginLeft: normalize(8),
+    borderColor: '#2f3d29',
+    borderWidth: 2,
+    borderRadius: 10,
+    backgroundColor: '#2f3d29',
+    padding: normalize(2),
+  },
+  select: {
+    color: COLOR.WHITE,
+    fontSize: 18,
+    fontWeight: '700',
+    marginLeft: normalize(20),
   },
 });

@@ -12,6 +12,7 @@ import Chating from '../screens/chat/messageScreen/chating';
 import {useSelector} from 'react-redux';
 import firestore from '@react-native-firebase/firestore';
 import UserAccountScreen from '../screens/userAccountScreen';
+import AllUser from '../screens/chat/messageScreen/allUser';
 
 const RootStack = createNativeStackNavigator();
 
@@ -60,6 +61,7 @@ const NavigationScreen = () => {
         <RootStack.Screen name="MessageScreen" component={MessageScreen} />
         <RootStack.Screen name="Chating" component={Chating} />
         <RootStack.Screen name="UserAccount" component={UserAccountScreen} />
+        <RootStack.Screen name="AllUser" component={AllUser} />
       </RootStack.Navigator>
     </NavigationContainer>
   );

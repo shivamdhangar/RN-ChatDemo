@@ -1,115 +1,214 @@
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import {
+  Image,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  Clipboard,
+} from 'react-native';
+import React, {useCallback, useEffect, useId, useState} from 'react';
 import {
   GiftedChat,
   Bubble,
   InputToolbar,
-  Composer,
+  Send,
+  IMessage,
 } from 'react-native-gifted-chat';
 import {images} from '../../../utils/images';
-import {normalize} from '../../../utils/dimensions';
+import {normalize, vh, vw} from '../../../utils/dimensions';
 import {useNavigation} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import firestore from '@react-native-firebase/firestore';
 import {COLOR} from '../../../utils/color';
 export default function Chating({route}: {route: any}) {
   const navigation = useNavigation<any>();
-  const {Name, UID, status} = route.params;
-  const [messages, setMessages] = useState([]);
+  const {Name, UID, pic, status} = route.params;
+  const [userStatus, setuserStatus] = useState('');
+  const [isTyping, setisTyping] = useState<boolean>(false);
+  const [getTypingStatus, setgetTypingStatus] = useState(false);
+  const [messages, setMessages] = useState<any>([]);
+  const [data, setData] = useState<any>([]);
   const {Auth_Data} = useSelector((store: any) => store.authReducer);
+  const {User_Data} = useSelector((store: any) => store.chatReducer);
+  let loginname = User_Data?.name;
   let UserId = Auth_Data?.user?.user?.uid;
-  const [isTyping, setisTyping] = useState(false);
-  const [timer, setTimer] = useState(100);
   const docid = UID > UserId ? UserId + '-' + UID : UID + '-' + UserId;
 
-  const onTextChange = (text: any) => {
-    if (text.length > 0) {
-      typingStatus(true);
-      clearTimeout(timer);
-
-      const newTimer = setTimeout(() => {
-        typingStatus(false);
-      }, 1000);
-      setTimer(newTimer);
+  const handleLongPress = (context: any, message: any) => {
+    let options, cancelButtonIndex;
+    if (UserId === message.fromUserID) {
+      options = ['Copy', 'Delete for me', 'Delete for everyone', 'cancel'];
+      cancelButtonIndex = options.length;
+      context.actionSheet().showActionSheetWithOptions(
+        {options, cancelButtonIndex},
+        //@ts-ignore
+        buttonIndex => {
+          switch (buttonIndex) {
+            case 0:
+              Clipboard.setString(message.text);
+              break;
+            case 1:
+              deletForMe(message, docid);
+              break;
+            case 2:
+              deletedForEveryOne(message, docid);
+              break;
+          }
+        },
+      );
+    } else {
+      options = ['Copy', 'Delete for me', 'cancel'];
+      cancelButtonIndex = options.length;
+      context.actionSheet().showActionSheetWithOptions(
+        {options, cancelButtonIndex},
+        //@ts-ignore
+        buttonIndex => {
+          switch (buttonIndex) {
+            case 0:
+              Clipboard.setString(message.text);
+              break;
+            case 1:
+              deletForMe(message, docid);
+              break;
+          }
+        },
+      );
     }
   };
-  const typingStatus = (value: boolean) => {
-    firestore()
-      .collection('userTypingStatus')
+
+  const handleRead = async () => {
+    const validate = await firestore()
+      .collection('chatrooms')
       .doc(docid)
-      .collection(UserId)
-      .doc('currentTypingStatus')
-      .set({
-        isTyping: value,
-      })
+      .collection('messages')
+      .get();
+    const batch = firestore()?.batch();
+    validate.forEach((documentSnapshot: any) => {
+      if (documentSnapshot?._data.toUserID === UserId) {
+        batch.update(documentSnapshot.ref, {received: true});
+      }
+    });
+    return batch.commit();
+  };
+
+  const deletForMe = (message: any, docid: any) => {
+    firestore()
+      .collection('chatrooms')
+      .doc(docid)
+      .collection('messages')
+      .doc(message?._id)
+      .update({...message, deleatedBy: UserId})
       .then(() => {
-        console.log('typing status set success');
-      })
-      .catch(error => {
-        console.log('typing status fail', error);
+        if (messages[0]?._id === message?._id) {
+        }
       });
   };
-  useEffect(() => {
+  const deletedForEveryOne = (message: any, docid: any) => {
     firestore()
-      .collection('userTypingStatus')
+      .collection('chatrooms')
       .doc(docid)
-      .collection(UID)
-      .doc('currentTypingStatus')
-      .onSnapshot(snapshot => {
-        setisTyping(snapshot?.data()?.isTyping);
-        console.log('------------->', snapshot);
+      .collection('messages')
+      .doc(message?._id)
+      .update({...message, deletedForEveryOne: true})
+      .then(() => {
+        if (messages[0]?._id === message?._id) {
+        }
       });
-    // return () => typingListner();
-  }, []);
+  };
 
   useEffect(() => {
-    const docid = UID > UserId ? UserId + '-' + UID : UID + '-' + UserId;
     const subscribe = firestore()
       .collection('chatrooms')
       .doc(docid)
       .collection('messages')
       .orderBy('createdAt', 'desc')
       .onSnapshot(documentSnapshot => {
+        handleRead();
         const allmsg = documentSnapshot.docs.map(item => {
           return item.data();
         });
-        allmsg.sort((a, b) => {
-          return b.createdAt - a.createdAt;
+        allmsg.sort((a, b) => b.createdAt - a.createdAt);
+        let newmessages = allmsg.filter(item => {
+          if (item.deletedForEveryOne) return false;
+          else if (item.deleatedBy) return item.deleatedBy != useId;
+          else return true;
         });
-        //@ts-ignore
-        setMessages(allmsg);
+        setMessages(newmessages);
       });
     return subscribe;
   }, []);
 
-  const getAllmsg = async () => {
-    const docid = UID > UserId ? UserId + '-' + UID : UID + '-' + UserId;
-    const querySanp = await firestore()
-      .collection('chatrooms')
-      .doc(docid)
-      .collection('messages')
-      .orderBy('createdAt', 'desc')
-      .get();
-    const allmsg = querySanp.docs.map(docSanp => {
-      return docSanp.data();
-    });
-    //@ts-ignore
-    setMessages(allmsg);
-  };
+  useEffect(() => {
+    const subscribe = firestore()
+      .collection('Users')
+      .doc(UID)
+      .onSnapshot((documentSnapshot: any) => {
+        setuserStatus(documentSnapshot.data()?.isActive);
+      });
+    return subscribe;
+  }, []);
 
   useEffect(() => {
-    getAllmsg();
+    firestore()
+      .collection('Users')
+      .doc(UserId)
+      .collection('inbox')
+      .onSnapshot((documentSnapshot: any) => {
+        let users = documentSnapshot?._docs?.map((item: any) => {
+          return item._data;
+        });
+        setData(users);
+      });
   }, []);
 
   const onSend = (messagesArray: any) => {
-    const msg = messagesArray[0];
-    messagesArray[0].createdAt = new Date().getTime();
+    let msg = messagesArray[0];
     const mymsg = {
       ...msg,
-      createdAt: new Date().getTime(),
+      fromUserID: UserId,
+      received: false,
+      sent: true,
+      toUserID: UID,
+      createdAt: new Date()?.getTime(),
     };
-    setMessages(previousMessages => GiftedChat.append(previousMessages, mymsg));
-    const docid = UID > UserId ? UserId + '-' + UID : UID + '-' + UserId;
+
+    if (messages.length == 0) {
+      firestore()
+        .collection('Users')
+        .doc(UserId)
+        .collection('inbox')
+        .doc(UID)
+        .set({
+          name: Name,
+          display: pic,
+          lastmessgae: mymsg,
+          uid: UID,
+        });
+
+      firestore()
+        .collection('Users')
+        .doc(UID)
+        .collection('inbox')
+        .doc(UserId)
+        .set({
+          name: loginname,
+          lastmessgae: mymsg,
+          display: User_Data?.display,
+          uid: UserId,
+        });
+    } else {
+      firestore()
+        .collection('Users')
+        .doc(UserId)
+        .collection('inbox')
+        .doc(UID)
+        .update({lastmessgae: mymsg});
+    }
+    setMessages((previousMessages: IMessage[] | undefined) =>
+      GiftedChat.append(previousMessages, mymsg),
+    );
+
     firestore()
       .collection('chatrooms')
       .doc(docid)
@@ -117,81 +216,74 @@ export default function Chating({route}: {route: any}) {
       .doc(mymsg._id)
       .set(mymsg);
   };
+  const renderSend = (props: any) => {
+    return (
+      <Send {...props} containerStyle={{marginBottom: 5, marginRight: 10}}>
+        <View style={styles.viewsendiconimg}>
+          <Image source={images.sendImg} style={styles.sendiconimg} />
+        </View>
+      </Send>
+    );
+  };
 
-  // useEffect(() => {
-  //   const docid = UID > UserId ? UserId + '-' + UID : UID + '-' + UserId;
-  //   firestore()
-  //     .collection('chatrooms')
-  //     .doc(docid)
-  //     .collection('TypingStatus')
-  //     .doc(UserId)
-  //     .set({
-  //       typing: typing,
-  //     });
-  //   firestore()
-  //     .collection('chatrooms')
-  //     .doc(docid)
-  //     .collection('TypingStatus')
-  //     .doc(UID)
-  //     .onSnapshot(onchange => {
-  //       let typing = onchange.data();
-  //       setTypingStatus(typing?.typing);
-  //     });
-  // }, [typing]);
+  useEffect(() => {
+    firestore()
+      .collection('chatrooms')
+      .doc(docid)
+      .collection('TypingStatus')
+      .doc(UserId)
+      .set({
+        isTyping: isTyping,
+      });
+    firestore()
+      .collection('chatrooms')
+      .doc(docid)
+      .collection('TypingStatus')
+      .doc(UID)
+      .onSnapshot(onchange => {
+        let typing = onchange.data();
+        setgetTypingStatus(typing?.isTyping);
+      });
+  }, [isTyping]);
 
-  // const debounce = useCallback((fun: any, timeout: any) => {
-  //   //@ts-ignore
-  //   let timer;
-  //   return (args: any) => {
-  //     //@ts-ignore
-  //     clearTimeout(timer);
-  //     timer = setTimeout(() => {
-  //       fun(false);
-  //     }, timeout);
-  //     setTyping(true);
-  //   };
-  // }, []);
+  const debounce = useCallback((fun: any, timeout: any) => {
+    //@ts-ignore
+    let timer;
+    return (args: any) => {
+      //@ts-ignore
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        fun(false);
+      }, timeout);
+      setisTyping(true);
+    };
+  }, []);
 
-  // const startTyping = debounce(() => {
-  //   setTyping(false);
-  // }, 2000);
+  const startTyping = debounce(() => {
+    setisTyping(false);
+  }, 2000);
 
-  // const findtyping = (text: any) => {
-  //   if (text.length > 0)
-  //     //@ts-ignore
-  //     startTyping();
-  // };
-
-  // const renderFooter = () => {
-  //   console.log('tfyhjbjm', typingStatus);
-  //   if (typingStatus) {
-  //     return (
-  //       <View style={{marginLeft: normalize(23)}}>
-  //         {/* <Spinner type={'Bounce'} isVisible={true} size={3} /> */}
-  //         {/* <Text style={{color: 'white'}}>{typingStatus}</Text> */}
-  //       </View>
-  //     );
-  //   }
-  // };
+  const findtyping = (text: any) => {
+    if (text.length > 0)
+      //@ts-ignore
+      startTyping();
+  };
 
   return (
     <View style={styles.parent}>
-      <View style={styles.body}>
-        <View style={styles.innerView}>
+      <View style={styles.innerview}>
+        <View style={styles.namearrowview}>
           <TouchableOpacity
             onPress={() => {
               navigation.goBack();
             }}>
             <Image style={styles.backimg} source={images.back} />
           </TouchableOpacity>
-          <View style={styles.headerComponent}>
-            <Text style={styles.nameTextChatting}>{Name}</Text>
-            {status ? (
-              <Text style={styles.onlineTextStyle}>{'Online'}</Text>
-            ) : (
-              <Text style={styles.offlineTextStyle}>{'Offline'}</Text>
-            )}
+          <View style={{alignItems: 'center'}}>
+            <Image style={styles.userbackground} source={images.account} />
+            <Image style={styles.profimg} source={{uri: pic}} />
           </View>
+          <Text style={styles.mainView}>{Name}</Text>
         </View>
 
         <View style={styles.leftview}>
@@ -206,42 +298,51 @@ export default function Chating({route}: {route: any}) {
           </TouchableOpacity>
         </View>
       </View>
+      {userStatus === 'online' ? (
+        <Text style={styles.onlinetxt}>{'Online'}</Text>
+      ) : (
+        <Text style={styles.oflinetxt}>{'Ofline'}</Text>
+      )}
       <View style={styles.line}></View>
-      <GiftedChat
-        isTyping={isTyping}
-        messages={messages}
-        onInputTextChanged={onTextChange}
-        onSend={text => onSend(text)}
-        showUserAvatar
-        user={{
-          _id: UserId,
-        }}
-        renderBubble={props => {
-          return (
-            <Bubble
+      <ImageBackground style={styles.girlimg} source={images.bgImg}>
+        <GiftedChat
+          onLongPress={handleLongPress}
+          isTyping={getTypingStatus}
+          onInputTextChanged={findtyping}
+          messagesContainerStyle={{height: vh(530)}}
+          messages={messages}
+          onSend={text => onSend(text)}
+          showUserAvatar
+          user={{
+            _id: UserId,
+          }}
+          renderBubble={props => {
+            return (
+              <Bubble
+                {...props}
+                tickStyle={{color: COLOR.BLACK}}
+                wrapperStyle={{
+                  right: {
+                    backgroundColor: COLOR.GREEN,
+                    left: normalize(40),
+                  },
+                  left: {
+                    right: normalize(35),
+                  },
+                }}
+              />
+            );
+          }}
+          renderInputToolbar={props => (
+            <InputToolbar
               {...props}
-              wrapperStyle={{
-                right: {
-                  backgroundColor: '#5375e0',
-                  left: normalize(50),
-                },
-                left: {
-                  right: normalize(50),
-                },
-              }}
+              containerStyle={styles.containview}
+              primaryStyle={{marginBottom: 0, height: 40, width: vw(350)}}
             />
-          );
-        }}
-        renderInputToolbar={props => (
-          <InputToolbar
-            {...props}
-            containerStyle={{backgroundColor: 'black'}}
-            renderComposer={props1 => (
-              <Composer {...props1} textInputStyle={{color: 'white'}} />
-            )}
-          />
-        )}
-      />
+          )}
+          renderSend={renderSend}
+        />
+      </ImageBackground>
     </View>
   );
 }
@@ -251,21 +352,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'black',
   },
-  body: {
+  innerview: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 70,
+    marginTop: normalize(65),
+    alignItems: 'center',
   },
-  innerView: {
+  namearrowview: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
   backimg: {
     height: normalize(25),
     width: normalize(25),
     left: 6,
-  },
-  headerComponent: {
-    marginLeft: normalize(20),
   },
   searchImg: {
     height: normalize(20),
@@ -288,16 +388,6 @@ const styles = StyleSheet.create({
     width: normalize(25),
     resizeMode: 'contain',
   },
-  offlineTextStyle: {
-    color: COLOR.YELLOW,
-    fontWeight: '600',
-    fontSize: 15,
-  },
-  onlineTextStyle: {
-    color: COLOR.GREEN,
-    fontWeight: '600',
-    fontSize: 15,
-  },
   menuTouchable: {
     borderColor: '#2f3d29',
     borderWidth: 1,
@@ -309,10 +399,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: normalize(2),
   },
-  nameTextChatting: {
+  mainView: {
     color: 'white',
-    // left: normalize(15),
-    fontSize: 18,
+    left: normalize(15),
+    fontSize: 20,
     fontWeight: '600',
   },
   leftview: {
@@ -323,6 +413,56 @@ const styles = StyleSheet.create({
     borderColor: 'grey',
     width: normalize(370),
     alignSelf: 'center',
-    marginTop: normalize(20),
+    marginTop: normalize(10),
+  },
+  viewsendiconimg: {
+    height: 30,
+    width: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendiconimg: {
+    height: normalize(22),
+    width: normalize(25),
+    resizeMode: 'contain',
+    bottom: normalize(4),
+  },
+  containview: {
+    backgroundColor: 'white',
+    marginHorizontal: normalize(15),
+    borderRadius: 22,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    marginBottom: 40,
+    fontSize: 18,
+    paddingTop: 5,
+  },
+  userbackground: {
+    height: normalize(40),
+    width: normalize(40),
+    left: normalize(10),
+    borderRadius: normalize(100),
+    resizeMode: 'cover',
+  },
+  profimg: {
+    height: normalize(40),
+    width: normalize(40),
+    left: normalize(10),
+    borderRadius: normalize(100),
+    position: 'absolute',
+  },
+  onlinetxt: {
+    color: COLOR.GREEN,
+    marginLeft: normalize(85),
+    fontSize: 15,
+  },
+  oflinetxt: {
+    color: COLOR.WHITE,
+    marginLeft: normalize(85),
+    fontSize: 15,
+  },
+  girlimg: {
+    height: '85%',
+    width: '100%',
   },
 });
