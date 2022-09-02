@@ -49,7 +49,7 @@ export default function Chating({route}: {route: any}) {
               Clipboard.setString(message.text);
               break;
             case 1:
-              deletForMe(message, docid);
+              deletForMe(message, docid, UserId);
               break;
             case 2:
               deletedForEveryOne(message, docid);
@@ -69,7 +69,7 @@ export default function Chating({route}: {route: any}) {
               Clipboard.setString(message.text);
               break;
             case 1:
-              deletForMe(message, docid);
+              deletForMe(message, docid, UserId);
               break;
           }
         },
@@ -92,7 +92,7 @@ export default function Chating({route}: {route: any}) {
     return batch.commit();
   };
 
-  const deletForMe = (message: any, docid: any) => {
+  const deletForMe = (message: any, docid: any, UserId: any) => {
     firestore()
       .collection('chatrooms')
       .doc(docid)
@@ -131,7 +131,7 @@ export default function Chating({route}: {route: any}) {
         allmsg.sort((a, b) => b.createdAt - a.createdAt);
         let newmessages = allmsg.filter(item => {
           if (item.deletedForEveryOne) return false;
-          else if (item.deleatedBy) return item.deleatedBy != useId;
+          else if (item.deleatedBy) return item.deleatedBy != UserId;
           else return true;
         });
         setMessages(newmessages);

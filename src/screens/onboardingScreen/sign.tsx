@@ -30,7 +30,7 @@ export default function SignIn() {
   const signInWithMobileNumber = async () => {
     try {
       setisLoading(true);
-      const confirmation = await auth().signInWithPhoneNumber(phoneno);
+      const confirmation = await auth().signInWithPhoneNumber('+91' + phoneno);
       navigation.navigate('OtpScreen', {phoneno, confirm: confirmation});
     } catch (err) {
       console.log('err', err);
